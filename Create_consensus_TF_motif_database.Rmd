@@ -1,0 +1,283 @@
+---
+title: "Create consensus TF motif list"
+output: html_document
+---
+
+```{r libraries}
+
+setwd("/groups/stark/almeida/Papers/DeepSTARR/Code/TF_motif_database/")
+
+library(TFBSTools)
+
+```
+
+```{r Load PWM data}
+
+# join all PWMs (in terminal)
+# cat /groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/singletons/bergman*cb > all_singletons.cb
+# cat /groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/singletons/cisbp*cb >> all_singletons.cb
+# cat /groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/singletons/flyfactorsurvey*cb >> all_singletons.cb
+# cat /groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/singletons/homer*cb >> all_singletons.cb
+# cat /groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/singletons/jaspar*cb >> all_singletons.cb
+# cat /groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/singletons/stark*cb >> all_singletons.cb
+# cat /groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/singletons/idmmpmm*cb >> all_singletons.cb
+
+# Read motifs
+singletons = read.table("all_singletons.cb", fill=T)
+
+# Create list of singletons
+n <- grep(">", singletons$V1)
+singletons_list <- list()
+for(i in 1:length(n)){
+  
+  init <- n[i]
+  fin <- n[i+1]
+  
+  if(!is.na(fin)) x <- singletons[(init+1):(fin-1),]
+  if(is.na(fin)) x <- singletons[(init+1):nrow(singletons),]
+  
+  x_out <- t(x)
+  class(x_out) <- "numeric"
+  colnames(x_out) <- NULL
+  rownames(x_out) <- c("A", "C", "G", "T")
+  
+  singletons_list[[gsub(">", "", as.character(singletons$V1[n][i]))]] <- x_out
+  
+}
+
+# scale PFMs with low column sum (number of sequences) to have column sums of at least 100 - in order to reduce the effect of the pseudocount
+table(sapply(singletons_list, function(x) max(colSums(x))))
+
+# 99 colsum is also common, so do it for matrices with less than 99
+singletons_list2 <- lapply(singletons_list, function(x){
+  if(max(colSums(x))>=99) return(x)
+  if(max(colSums(x))<99) return(x * (100/max(colSums(x))))
+  })
+
+
+# transform in PFMatrix
+singletons_PFM <- lapply(seq_along(singletons_list2), function(i){
+  return(PFMatrix(ID=names(singletons_list2)[i],
+                  name = names(singletons_list2)[i],
+                  profileMatrix = singletons_list2[[i]]))
+})
+
+# to PWM log_odds (default 0.8 pseudocounts)
+# also suggested here https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2647310/
+singletons_pwms_log_odds <- do.call(PWMatrixList,lapply(singletons_PFM, TFBSTools::toPWM,
+                                           type="log2probratio", pseudocounts = 0.8))
+
+# to PWM probs - to plot logos
+singletons_pwms <- do.call(PWMatrixList,lapply(singletons_PFM, TFBSTools::toPWM,
+                                           type="prob", pseudocounts = 0))
+
+```
+
+```{r add motif clustering data}
+
+# Load metadata
+metadata <- read.delim("motifs.tsv")
+metadata <- metadata[-grep("# motif_collection_name", metadata$X..motif_collection_name),]
+
+# load motif clustering - done for the most important motif collections
+motifclust <- readRDS("/groups/stark/almeida/data/motifs/Drosophila_and_others_motif_clustering/All_motifs_final_clusters_thresh0.8.rds")
+
+metadata$Motif_cluster <- motifclust$Cluster[match(metadata$motif_name, motifclust$Motifs)]
+
+# load motif cluster names
+TF_motif_clusters_manual_annotation <- read.csv("TF_motif_clusters_threshold0.8_manual_annotation.csv")
+
+metadata$Motif_cluster_name <- TF_motif_clusters_manual_annotation$Cluster_name[match(metadata$Motif_cluster, TF_motif_clusters_manual_annotation$Cluster)]
+
+metadata <- metadata[metadata$motif_name %in% name(singletons_pwms),c(3,1,2,4:ncol(metadata))]
+
+```
+
+```{r Curate metadata information}
+
+metadata$motif_description <- as.character(metadata$motif_description)
+table(metadata$X..motif_collection_name)
+
+### Add motif species
+metadata$Species <- NA
+metadata$Species[metadata$X..motif_collection_name %in% c("scertf", "yetfasco", "homer", "jaspar", "cisbp")] <- "Multiple"
+
+metadata$Species[metadata$X..motif_collection_name %in% c("bergman", "flyfactorsurvey", "idmmpmm", "stark", "tiffin")] <- "Drosophila"
+metadata$Species[grep("Drosophila-Promoters", metadata$motif_description)] <- "Drosophila"
+metadata$Species[grep("Drosophila-Embryos", metadata$motif_description)] <- "Drosophila"
+
+metadata$Species[metadata$X..motif_collection_name %in% c("c2h2_zfs", "factorbook", "hdpi", "neph", "predrem", "taipale", "taipale_tf_pairs", "tfdimers")] <- "Human"
+metadata$Species[grep("swissregulon__hs", metadata$motif_id)] <- "Human"
+metadata$Species[metadata$X..motif_collection_name %in% c("hocomoco")] <- "Human/mouse"
+
+metadata$Species[grep("between Hs and", metadata$motif_description)] <- "Human"
+metadata$Species[grep("between Dmel and", metadata$motif_description)] <- "Drosophila"
+
+metadata$Species[metadata$X..motif_collection_name %in% c("scertf", "yetfasco")] <- "Saccharomyces"
+metadata$Species[grep("swissregulon__sacCer", metadata$motif_id)] <- "Saccharomyces"
+
+
+### Change Ohler promoter motifs IDs
+metadata$motif_description[grep("homer__AAAAATACCRMA_Unknown4", metadata$motif_id)] <- "Ohler6/Drosophila-Promoters/Homer"
+metadata$motif_description[grep("homer__AACAGCTGTTHN_E-box", metadata$motif_id)] <- "Ohler5(E-box)/Drosophila-Promoters/Homer"
+metadata$motif_description[grep("homer__AVYTATCGATAD_DREF", metadata$motif_id)] <- "DRE/Drosophila-Promoters/Homer"
+metadata$motif_description[grep("homer__CATCMCTA_Unknown2", metadata$motif_id)] <- "Ohler7/Drosophila-Promoters/Homer"
+metadata$motif_description[grep("homer__MYGGTCACACTG_Unknown1", metadata$motif_id)] <- "Ohler1/Drosophila-Promoters/Homer"
+metadata$motif_description[grep("homer__MYGGTCACACTG_Unknown1", metadata$motif_id)] <- "Ohler1/Drosophila-Promoters/Homer"
+
+
+### CisBP gene annotation
+tmp <- metadata[metadata$X..motif_collection_name %in% "cisbp",]
+tmp <- tmp[grep("Drosophila melanogaster", tmp$motif_description),]
+tmp$Cisbp_dmel_gene <- sapply(1:nrow(tmp), function(i){
+  spl <- strsplit(tmp$motif_description[i],"; ")[[1]]
+  paste0(spl[grep("Drosophila melanogaster", spl)], collapse = "; ")
+})
+
+metadata$Cisbp_dmel_gene <- tmp$Cisbp_dmel_gene[match(metadata$motif_name, tmp$motif_name)]
+
+
+### Add/correct Drosophila TF name
+metadata$Dmel <- NA
+metadata$Dmel[metadata$Species %in% "Drosophila"] <- metadata$motif_description[metadata$Species %in% "Drosophila"]
+
+metadata$Dmel[complete.cases(metadata$Cisbp_dmel_gene)] <- metadata$Cisbp_dmel_gene[complete.cases(metadata$Cisbp_dmel_gene)]
+metadata$Dmel <- sapply(strsplit(metadata$Dmel,"\\["), `[`, 1)
+metadata$Dmel <- sapply(strsplit(metadata$Dmel,"_Cell|_SOLEXA|_SANGER|_NAR|-F1"), `[`, 1)
+metadata$Dmel <- sapply(strsplit(metadata$Dmel,"_NAR|-F|_FlyReg|_F|NBT"), `[`, 1)
+metadata$Dmel <- sapply(strsplit(metadata$Dmel,"/Drosophila"), `[`, 1)
+
+metadata$Dmel[grep("twist", metadata$Dmel)] <- "twi"
+metadata$Dmel[grep("cisbp__M5214", metadata$motif_name)] <- "srp"
+metadata$Dmel[grep("flyfactorsurvey__dm_Max_SANGER_10_FBgn0000472", metadata$motif_name)] <- "Max"
+metadata$Dmel[grep("FBgn0262975", metadata$Dmel)] <- "cnc"
+metadata$Dmel[grep("FBgn0263240", metadata$Dmel)] <- "Coop"
+metadata$Dmel[grep("FBgn0262477", metadata$Dmel)] <- "FoxP"
+metadata$Dmel[grep("FBgn0054031", metadata$Dmel)] <- "CG34031"
+metadata$Dmel[grep("FBgn0261705", metadata$Dmel)] <- "CG42741"
+metadata$Dmel[grep("FBgn0262582", metadata$Dmel)] <- "cic"
+metadata$Dmel[grep("FBgn0262656", metadata$Dmel)] <- "Myc"
+metadata$Dmel[grep("FBgn0261703", metadata$Dmel)] <- "gce"
+metadata$Dmel[grep("FBgn0263112", metadata$Dmel)] <- "Mitf"
+metadata$Dmel[grep("FBgn0261930", metadata$Dmel)] <- "vnd"
+metadata$Dmel[grep("FBgn0261963", metadata$Dmel)] <- "mid"
+metadata$Dmel[grep("FBgn0263239", metadata$Dmel)] <- "dar1"
+metadata$Dmel[grep("FBgn0262139", metadata$Dmel)] <- "trh"
+metadata$Dmel[grep("FBpp0292044", metadata$Dmel)] <- "pdm3"
+metadata$Dmel[grep("FBpp0073832", metadata$Dmel)] <- "acj6"
+metadata$Dmel[grep("FBgn0028550", metadata$motif_description)] <- "Atf3"
+metadata$Dmel[grep("FBgn0040918", metadata$motif_description)] <- "schlank"
+metadata$Dmel[grep("SU(HW)", metadata$Dmel, fixed=T)] <- "su(Hw)"
+metadata$Dmel[grep("suHw_FlyReg_FBgn0003567", metadata$motif_description, fixed=T)] <- "su(Hw)"
+metadata$Dmel[grep("SuH_FlyReg_FBgn0004837", metadata$motif_description, fixed=T)] <- "Su(H)"
+metadata$Dmel[grep("sens2_", metadata$motif_description, fixed=T)] <- "sens-2"
+metadata$Dmel[grep("kenF1-CG4360_F2-3_SOLEXA_5", metadata$motif_description, fixed=T)] <- "CG4360"
+metadata$Dmel[grep("disco-r-Cl1_SANGER_5_FBgn0042650", metadata$motif_description, fixed=T)] <- "disco-r"
+metadata$Dmel[grep("_FBgn0024184", metadata$motif_description, fixed=T)] <- "unc-4"
+metadata$Dmel[grep("Espl_FlyReg_FBgn0000591", metadata$motif_description, fixed=T)] <- "E(spl)"
+metadata$Dmel[grep("FBgn0004854", metadata$motif_description, fixed=T)] <- "B-H2"
+metadata$Dmel[grep("FBgn0011758", metadata$motif_description, fixed=T)] <- "B-H1"
+metadata$Dmel[grep("BCl6-F5_CG4360F2-3_SOLEXA_2.5", metadata$motif_description, fixed=T)] <- "CG4360"
+metadata$Dmel[grep("FBgn0000015", metadata$motif_description, fixed=T)] <- "Abd-B"
+metadata$Dmel[grep("FBgn0000014", metadata$motif_description, fixed=T)] <- "abd-A"
+metadata$Dmel[grep("FBgn0000286", metadata$motif_description, fixed=T)] <- "Cf2"
+metadata$Dmel[grep("twi_da_SANGER_5_FBgn0000413", metadata$motif_description, fixed=T)] <- "twi"
+metadata$Dmel[grep("jaspar__MA0534.1", metadata$motif_id, fixed=T)] <- "EcR/usp"
+metadata$Dmel[grep("jaspar__MA0533.1", metadata$motif_id, fixed=T)] <- "su(Hw)"
+metadata$Dmel[grep("homer__AVYTATCGATAD_DREF", metadata$motif_id, fixed=T)] <- "Dref"
+metadata$Dmel[grep("jaspar__MA0530.1", metadata$motif_id, fixed=T)] <- "cnc/maf-S"
+metadata$Dmel[grep("stark__GNCTANWWATA", metadata$motif_id, fixed=T)] <- "Mef2"
+metadata$Dmel[grep("stark__GRGGTCAYS", metadata$motif_id, fixed=T)] <- "usp"
+metadata$Dmel[grep("stark__TGGCGYY", metadata$motif_id, fixed=T)] <- "brk"
+metadata$Dmel[grep("stark__KVRKRNTCACTSRNTVHDB", metadata$motif_id, fixed=T)] <- "eyg"
+metadata$Dmel[grep("stark__AAHKMTHBCA", metadata$motif_id, fixed=T)] <- "kni"
+metadata$Dmel[grep("stark__ANHDDBHGATAASSDNNB", metadata$motif_id, fixed=T)] <- "pnr"
+metadata$Dmel[grep("stark__YGATAAGC", metadata$motif_id, fixed=T)] <- "pnr"
+metadata$Dmel[grep("stark__BYAATTARH", metadata$motif_id, fixed=T)] <- "en"
+metadata$Dmel[grep("stark__HAATTAYGCRH", metadata$motif_id, fixed=T)] <- "en"
+metadata$Dmel[grep("stark__CAGGTG", metadata$motif_id, fixed=T)] <- "sna"
+metadata$Dmel[grep("stark__CCTTTGATCTT", metadata$motif_id, fixed=T)] <- "pan"
+metadata$Dmel[grep("stark__CTCRTAAAW", metadata$motif_id, fixed=T)] <- "cad"
+metadata$Dmel[grep("stark__TTTATG", metadata$motif_id, fixed=T)] <- "cad"
+metadata$Dmel[grep("stark__KHGATAASR", metadata$motif_id, fixed=T)] <- "srp"
+metadata$Dmel[grep("stark__KNVNVBYTAATKRSBHNVD", metadata$motif_id, fixed=T)] <- "Ubx"
+metadata$Dmel[grep("stark__CAACAA", metadata$motif_id, fixed=T)] <- "Aef1"
+metadata$Dmel[grep("stark__GCAACA", metadata$motif_id, fixed=T)] <- "Aef1"
+metadata$Dmel[grep("stark__MAACAA", metadata$motif_id, fixed=T)] <- "Aef1"
+metadata$Dmel[grep("stark__MAACAA", metadata$motif_id, fixed=T)] <- "Aef1"
+metadata$Dmel[grep("stark__TGGAGGDGGWAHTMATBVRTGWDDDRKKMW", metadata$motif_id, fixed=T)] <- "Toy"
+metadata$Dmel[grep("stark__TWTKACKTAANA", metadata$motif_id, fixed=T)] <- "gt"
+metadata$Dmel[grep("stark__VRGKTYAWTGAMMYY", metadata$motif_id, fixed=T)] <- "EcR"
+metadata$Dmel[grep("stark__VVVBTAATCC", metadata$motif_id, fixed=T)] <- "bcd"
+metadata$Dmel[grep("stark__VSNKTDATKRCNV", metadata$motif_id, fixed=T)] <- "Abd-B"
+metadata$Dmel[grep("ttk", metadata$Dmel, ignore.case = F)] <- "ttk"
+metadata$Dmel[grep("Achi", metadata$Dmel, ignore.case=T)] <- "achi"
+metadata$Dmel[grep("^Eve", metadata$Dmel, ignore.case=T)] <- "eve"
+metadata$Dmel[grep("Pb", metadata$Dmel)] <- "pb"
+metadata$Dmel[grep("Lab", metadata$Dmel)] <- "lab"
+metadata$Dmel[grep("Ara", metadata$Dmel)] <- "ara"
+metadata$Dmel[grep("ase", metadata$Dmel)] <- "ase"
+metadata$Dmel[grep("apterous", metadata$Dmel, ignore.case=T)] <- "ap"
+metadata$Dmel[grep("^ato", metadata$Dmel)] <- "ato"
+metadata$Dmel[grep("Bap", metadata$Dmel)] <- "bap"
+metadata$Dmel[grep("bicoid", metadata$Dmel)] <- "bcd"
+metadata$Dmel[grep("biniou", metadata$Dmel)] <- "bin"
+metadata$Dmel[grep("br-|broad", metadata$Dmel)] <- "br"
+metadata$Dmel[grep("brachyenteron", metadata$Dmel)] <- "byn"
+metadata$Dmel[grep("Bsh", metadata$Dmel)] <- "bsh"
+metadata$Dmel[grep("Ap", metadata$Dmel)] <- "ap"
+metadata$Dmel[grep("Btn", metadata$Dmel)] <- "btn"
+metadata$Dmel[grep("CG12236", metadata$Dmel)] <- "CG12236"
+metadata$Dmel[grep("Ct$", metadata$Dmel)] <- "ct"
+metadata$Dmel[grep("Exd$", metadata$Dmel)] <- "exd"
+metadata$Dmel[grep("lola", metadata$Dmel)] <- "lola"
+metadata$Dmel[grep("Sqz", metadata$Dmel)] <- "sqz"
+metadata$Dmel[grep("Sug", metadata$Dmel)] <- "sug"
+metadata$Dmel[grep("Ets21", metadata$Dmel)] <- "Ets21C"
+
+
+### remove redundant motifs
+metadata <- metadata[-grep("cisbp__M5050", metadata$motif_name),]
+singletons_pwms_log_odds <- singletons_pwms_log_odds[-grep("cisbp__M5050", name(singletons_pwms_log_odds))]
+singletons_pwms <- singletons_pwms[-grep("cisbp__M5050", name(singletons_pwms))]
+
+# rm tiffin motif names
+metadata$Dmel[metadata$X..motif_collection_name %in% "tiffin"] <- NA
+
+
+#### correct motif description
+metadata$motif_description2 <- as.character(metadata$motif_description)
+metadata$motif_description2 <- sapply(strsplit(metadata$motif_description2,"_"), `[`, 1)
+metadata$motif_description2 <- sapply(strsplit(metadata$motif_description2,"/"), `[`, 1)
+metadata$motif_description2 <- sapply(strsplit(metadata$motif_description2,"\\("), `[`, 1)
+metadata$motif_description2 <- sapply(strsplit(metadata$motif_description2,"\\["), `[`, 1)
+metadata$motif_description2[complete.cases(metadata$Dmel)] <- metadata$Dmel[complete.cases(metadata$Dmel)]
+
+metadata$motif_description2 <- gsub("ttk-PF", "ttk", metadata$motif_description2)
+metadata$motif_description2 <- gsub("tramtrack", "ttk", metadata$motif_description2)
+metadata$Dmel <- gsub("tramtrack", "ttk", metadata$Dmel)
+metadata$motif_description2 <- gsub("Kruppel", "Kr", metadata$motif_description2)
+metadata$Dmel <- gsub("Kruppel", "Kr", metadata$Dmel)
+metadata$motif_description2 <- gsub("activating-protein 1 \\(FOS-JUN heterodimer\\)", "kay_Jra", metadata$motif_description2)
+metadata$Dmel <- gsub("activating-protein 1 \\(FOS-JUN heterodimer\\)", "kay_Jra", metadata$Dmel)
+metadata$motif_description2[grep("homer__GCTGATAASV_Unknown5", metadata$motif_name)] <- "GATAA"
+metadata$Dmel[grep("homer__GCTGATAASV_Unknown5", metadata$motif_name)] <- "GATAA"
+metadata$motif_description2[grep("cisbp__M2335", metadata$motif_name)] <- "GATAA"
+metadata$Dmel[grep("cisbp__M2335", metadata$motif_name)] <- "GATAA"
+metadata$motif_description2 <- gsub("TIFDMEM0000091", "Ohler6", metadata$motif_description2)
+metadata$Dmel[grep("TIFDMEM0000091", metadata$motif_name)] <- "Ohler6"
+metadata$motif_description2 <- gsub("ENSG00000235187", "Ets", metadata$motif_description2)
+metadata$motif_description2 <- gsub("Ohler5\\(E-box\\)", "Ohler5", metadata$motif_description2)
+metadata$Dmel <- gsub("Ohler5\\(E-box\\)", "Ohler5", metadata$Dmel)
+
+```
+
+```{r save final table}
+
+TF_clusters_PWMs <- list(metadata=metadata[,c(1:5,13,11,12,10,8,9,6,7)],
+                         All_pwms_log_odds=singletons_pwms_log_odds,
+                         All_pwms_perc=singletons_pwms)
+save(TF_clusters_PWMs, file="TF_clusters_PWMs.RData")
+
+```
+
