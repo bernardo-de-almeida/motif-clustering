@@ -1,6 +1,6 @@
 # Reference compendium of non-redundant TF motifs
 
-Here is the general workflow for systematically clustering motifs by similarity to remove redundancy. This approach was adapted from the awesome [Vierstra et al., Nature 2020](https://www.nature.com/articles/s41586-020-2528-x) and applied to 6,502 TF motif models from multiple species (mostly focused on *Drosophila* and human TFs).
+Here is the general workflow for systematically clustering motifs by similarity to remove redundancy. This approach was adapted from the awesome [Vierstra et al., Nature 2020](https://www.nature.com/articles/s41586-020-2528-x) ([code](https://github.com/jvierstra/motif-clustering)) and applied to 6,502 TF motif models from multiple species (mostly focused on *Drosophila* and human TFs).
 
 ## Included motif databases
 
