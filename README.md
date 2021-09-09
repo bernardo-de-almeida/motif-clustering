@@ -48,6 +48,9 @@ Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clus
 - Step 6: Curate metadata information with cluster information and save PWM models into single R object [TF_clusters_PWMs.RData](https://data.starklab.org/almeida/Motif_clustering/TF_clusters_PWMs.RData)
 <br/><br/>
 
+## Final compendium of non-redundant TF motifs
+[TF_clusters_PWMs.RData](https://data.starklab.org/almeida/Motif_clustering/TF_clusters_PWMs.RData)
+
 *TF_clusters_PWMs.RData* is a list containing:
 - metadata table with information for each TF motif model
 - list with all PWMs (log-odds, position weight matrix)
@@ -61,6 +64,7 @@ These motif models can be used to scan any DNA sequence of interest in R as foll
 ```
 library(motifmatchr) #(https://bioconductor.org/packages/release/bioc/html/motifmatchr.html)
 # using PWM log-odds
+load("TF_clusters_PWMs.RData")
 motif_ix <- matchMotifs(TF_clusters_PWMs$All_pwms_log_odds,
                         Sequences,
                         genome = "BSgenome.Dmelanogaster.UCSC.dm3", p.cutoff = 1e-4, bg="genome", out = "scores")
