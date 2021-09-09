@@ -62,7 +62,8 @@ More information about PWM formats (Position weight matrix): https://en.wikipedi
 ## Scan genome using all motif models
 These motif models can be used to scan any DNA sequence of interest in R as follows:
 ```
-library(motifmatchr) #(https://bioconductor.org/packages/release/bioc/html/motifmatchr.html)
+library(motifmatchr) # (https://bioconductor.org/packages/release/bioc/html/motifmatchr.html)
+
 # using PWM log-odds
 load("TF_clusters_PWMs.RData")
 motif_ix <- matchMotifs(TF_clusters_PWMs$All_pwms_log_odds,
