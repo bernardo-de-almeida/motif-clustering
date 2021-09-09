@@ -34,7 +34,7 @@ TF motif models were downloaded from [here](https://resources.aertslab.org/paper
 **Motif_clustering.R**
 - Step 3: Hierarchically cluster motifs by similarity (distance: correlation, complete linkage)
 Below is a heatmap representation of motifs clustered by simililarity and clusters identified cutting the dendrogram at height 0.8.
-<img src="https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/All_motifs_hierarchically_clustered_heatmap_pairwise_similarity_scores.png" alt="drawing" width="500"/>
+<img src="https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/All_motifs_hierarchically_clustered_heatmap_pairwise_similarity_scores.png" alt="drawing" width="500" style="margin:0 0 0 0"/>
 You can check the position of all motif clusters in the heatmap using the heatmaps at https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/ (cluster highlighted on x- and y-axis on red).
 
 Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/Highlight_cluster_30.png).

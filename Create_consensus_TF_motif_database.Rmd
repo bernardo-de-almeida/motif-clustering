@@ -76,7 +76,7 @@ singletons_pwms <- do.call(PWMatrixList,lapply(singletons_PFM, TFBSTools::toPWM,
 ```{r add motif clustering data}
 
 # Load metadata
-metadata <- read.delim("motifs.tsv")
+metadata <- read.delim("motifs_metadata.tsv")
 metadata <- metadata[-grep("# motif_collection_name", metadata$X..motif_collection_name),]
 
 # load motif clustering - done for the most important motif collections
