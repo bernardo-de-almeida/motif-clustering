@@ -34,17 +34,15 @@ TF motif models were downloaded from [here](https://resources.aertslab.org/paper
 **Motif_clustering.R**
 - Step 3: Hierarchically cluster motifs by similarity (distance: correlation, complete linkage)
 Below is a heatmap representation of motifs clustered by simililarity and clusters identified cutting the dendrogram at height 0.8.
-![Clustered heatmap cut at height 0.8](https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/All_motifs_hierarchically_clustered_heatmap_pairwise_similarity_scores.png)
-
-<img src="https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/All_motifs_hierarchically_clustered_heatmap_pairwise_similarity_scores.png" alt="drawing" width="200"/>
+<img src="https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/All_motifs_hierarchically_clustered_heatmap_pairwise_similarity_scores.png" alt="drawing" width="500"/>
 
 You can check the position of all motif clusters in the heatmap using the heatmaps at https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/ (cluster highlighted on x- and y-axis on red).
-Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/Highlight_cluster_30.png)
+Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/Highlight_cluster_30.png).
 <br/><br/>
 
 - Step 4: Annotation of motif clusters: clusters were manually curated and annotated with the respective motif types
 - Step 5: Plot motif logos aligned for each motif cluster ([example of motifs from cluster 30 - GATA/1](https://data.starklab.org/almeida/Motif_clustering/Clusters_logos/Cluster30_GATA.1_44motifs.pdf)). All motif logos per cluster at at https://data.starklab.org/almeida/Motif_clustering/Clusters_logos/.
-
+<br/><br/>
 
 **Create_consensus_TF_motif_database.Rmd**
 - Step 6: Curate metadata information with cluster information and save PWM models into single R object [TF_clusters_PWMs.RData](https://data.starklab.org/almeida/Motif_clustering/TF_clusters_PWMs.RData)
@@ -58,7 +56,7 @@ Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clus
 More information on PWM (Position weight matrix): https://en.wikipedia.org/wiki/Position_weight_matrix
 <br/><br/>
 
-**Scan genome using all motif models** 
+**Scan genome using all motif models**  
 These motif models can be used to scan any DNA sequence of interest in R as follows:
 ```
 library(motifmatchr) (https://bioconductor.org/packages/release/bioc/html/motifmatchr.html)
