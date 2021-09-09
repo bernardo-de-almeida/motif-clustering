@@ -36,6 +36,7 @@ TF motif models were downloaded from [here](https://resources.aertslab.org/paper
 Below is a heatmap representation of motifs clustered by simililarity and clusters identified cutting the dendrogram at height 0.8.
 <img src="https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/All_motifs_hierarchically_clustered_heatmap_pairwise_similarity_scores.png" alt="drawing" width="500"/>
 You can check the position of all motif clusters in the heatmap using the heatmaps at https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/ (cluster highlighted on x- and y-axis on red).
+
 Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clustering/Clusters_heatmaps/Highlight_cluster_30.png).
 <br/><br/>
 
@@ -52,13 +53,13 @@ Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clus
 - list with all PWMs (log-odds, position weight matrix)
 - list with all PWMs (position probability matrix) 
 
-More information on PWM (Position weight matrix): https://en.wikipedia.org/wiki/Position_weight_matrix
+More information about PWM formats (Position weight matrix): https://en.wikipedia.org/wiki/Position_weight_matrix
 <br/><br/>
 
 ## Scan genome using all motif models
 These motif models can be used to scan any DNA sequence of interest in R as follows:
 ```
-library(motifmatchr) (https://bioconductor.org/packages/release/bioc/html/motifmatchr.html)
+library(motifmatchr) #(https://bioconductor.org/packages/release/bioc/html/motifmatchr.html)
 # using PWM log-odds
 motif_ix <- matchMotifs(TF_clusters_PWMs$All_pwms_log_odds,
                         Sequences,
