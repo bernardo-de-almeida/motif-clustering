@@ -49,9 +49,9 @@ Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clus
 <br/><br/>
 
 ## Final compendium of non-redundant TF motifs
-[TF_clusters_PWMs.RData](https://data.starklab.org/almeida/Motif_clustering/TF_clusters_PWMs.RData)
+Download R object: [TF_clusters_PWMs.RData](https://data.starklab.org/almeida/Motif_clustering/TF_clusters_PWMs.RData)
 
-*TF_clusters_PWMs.RData* is a list containing:
+**TF_clusters_PWMs.RData** is a list containing:
 - metadata table with information for each TF motif model
 - list with all PWMs (log-odds, position weight matrix)
 - list with all PWMs (position probability matrix) 
