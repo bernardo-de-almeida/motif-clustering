@@ -74,6 +74,10 @@ motif_ix <- matchMotifs(TF_clusters_PWMs$All_pwms_log_odds,
 ## Enrichment of TF motifs in developmental and housekeeping Drosophila S2 enhancers
 Here is an example of motif enrichment analysis in developmental and housekeeping Drosophila S2 enhancers over negative regions ([volcano plots](https://data.starklab.org/almeida/Drosophila_enhancers_motif_enrichment/Motif_enrichment_volcano_plots.pdf)) using this TF motif database. To remove motif redundancy, only the most significant TF motif per motif cluster was shown.
 
+## Citation
+If you use this resource in your research, please kindly cite:
+- de Almeida, B.P., Reiter, F., Pagani, P., Stark, A. DeepSTARR predicts enhancer activity from DNA sequence and enables the de novo design of enhancers. bioRxiv (2021)
+
 ## Questions
 If you have any questions/requests/comments please contact me at [bernardo.almeida94@gmail.com](mailto:bernardo.almeida94@gmail.com)
 
