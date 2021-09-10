@@ -79,7 +79,7 @@ If you use this resource in your research, please kindly cite:
 - de Almeida, B.P., Reiter, F., Pagani, P., Stark, A. DeepSTARR predicts enhancer activity from DNA sequence and enables the de novo design of enhancers. bioRxiv (2021)
 
 ## Questions
-If you have any questions/requests/comments please contact me at [bernardo.almeida94@gmail.com](mailto:bernardo.almeida94@gmail.com)
+If you have any questions/requests/comments please contact me at [bernardo.almeida94@gmail.com](mailto:bernardo.almeida94@gmail.com).
 
 ## Acnowledgments
 We thank Gert Hulselmans and [Stein Aerts](https://aertslab.org/) for sharing the TF motif PWM collection. This approach was inspired on [Jeff Vierstra](https://www.vierstra.org/)'s work (see here for more details on his [Non-redundant TF motif matches genome-wide for mouse and human TFs](https://www.vierstra.org/resources/motif_clustering)).
