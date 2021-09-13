@@ -41,7 +41,7 @@ Example of [cluster 30 highlighted](https://data.starklab.org/almeida/Motif_clus
 <br/><br/>
 
 - Step 4: Annotation of motif clusters: clusters were manually curated and annotated with the respective motif types
-- Step 5: Plot motif logos aligned for each motif cluster ([example of motifs from cluster 30 - GATA/1](https://data.starklab.org/almeida/Motif_clustering/Clusters_logos/Cluster30_GATA.1_44motifs.pdf)). All motif logos per cluster at at https://data.starklab.org/almeida/Motif_clustering/Clusters_logos/.
+- Step 5: Plot motif logos aligned for each motif cluster ([example of motifs from cluster 30 - GATA/1](https://data.starklab.org/almeida/Motif_clustering/Clusters_logos/Cluster30_GATA.1_44motifs.pdf)). All motif logos per cluster at https://data.starklab.org/almeida/Motif_clustering/Clusters_logos/.
 <br/><br/>
 
 **Create_consensus_TF_motif_database.Rmd**
